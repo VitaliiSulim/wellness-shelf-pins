@@ -8,8 +8,9 @@
 Ссылка: партнёрская из колонки `link`, если она заполнена, иначе прямая на
 товар — так было с первыми пинами до одобрения программы в Admitad.
 
-Расписание: 4 слота в день по Лондону. Pinterest в CSV ждёт время без зоны
-и трактует его в часовом поясе аккаунта, поэтому пишем лондонское время как есть.
+Расписание: 4 слота в день по Лондону. Pinterest читает время в CSV как UTC,
+поэтому слоты переводим из Europe/London в UTC — с учётом перехода BST/GMT.
+На Windows для zoneinfo нужен пакет tzdata (requirements.txt).
 
 Запуск:
     python scripts/build_csv.py --out first8.csv --now          # опубликовать сразу
@@ -18,15 +19,17 @@
 
 import argparse
 import csv
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 PRODUCTS = ROOT / "data" / "products.csv"
 OUT_DIR = ROOT / "content" / "csv"
 
 RAW = "https://raw.githubusercontent.com/VitaliiSulim/wellness-shelf-pins/main/content/pins/"
-SLOTS = ["07:30", "12:00", "18:00", "20:30"]
+SLOTS = [time(7, 30), time(12, 0), time(18, 0), time(20, 30)]
+LONDON = ZoneInfo("Europe/London")
 
 # Порядок колонок официальный, из шаблона Pinterest.
 COLUMNS = ["Title", "Media URL", "Pinterest board", "Thumbnail",
@@ -54,7 +57,8 @@ def main():
             when = ""
             if not args.now and start:
                 day = start + timedelta(days=i // len(SLOTS))
-                when = f"{day.isoformat()}T{SLOTS[i % len(SLOTS)]}:00"
+                local = datetime.combine(day, SLOTS[i % len(SLOTS)], tzinfo=LONDON)
+                when = local.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
             w.writerow({
                 "Title": p["title"],
                 "Media URL": RAW + f"{p['id']}.jpg",
