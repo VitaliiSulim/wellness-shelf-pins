@@ -13,7 +13,7 @@
 Фото товаров кешируются в content/cache/, готовые пины — content/pins/<id>.jpg.
 
 Запуск:
-    python scripts/render_pins.py            # все товары со статусом draft
+    python scripts/render_pins.py            # все товары со статусом draft*
     python scripts/render_pins.py 88819 4193 # только указанные id
 """
 
@@ -52,8 +52,15 @@ def fetch_image(path):
     local = CACHE / path.replace("/", "_")
     if not local.exists():
         req = urllib.request.Request(CDN + path, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=30) as r:
-            local.write_bytes(r.read())
+        # CDN изредка подвисает — три попытки, прежде чем сдаться
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(req, timeout=60) as r:
+                    local.write_bytes(r.read())
+                break
+            except (TimeoutError, OSError):
+                if attempt == 2:
+                    raise
     return Image.open(local).convert("RGB")
 
 
@@ -143,7 +150,7 @@ def main():
     with open(PRODUCTS, encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     for p in rows:
-        if (ids and p["id"] in ids) or (not ids and p["status"] == "draft"):
+        if (ids and p["id"] in ids) or (not ids and p["status"].startswith("draft")):
             print(render(p))
 
 
