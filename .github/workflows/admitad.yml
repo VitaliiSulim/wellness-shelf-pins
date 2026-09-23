@@ -1,7 +1,8 @@
 name: admitad
 
 # Ручной запуск: check — проверить ключи и подключение iHerb,
-# links — дописать партнёрские ссылки в data/products.csv и закоммитить.
+# links — дописать партнёрские ссылки в data/products.csv и закоммитить,
+# catalog — выгрузить все доступные программы артефактом catalog.
 on:
   workflow_dispatch:
     inputs:
@@ -10,7 +11,7 @@ on:
         required: true
         default: check
         type: choice
-        options: [check, links]
+        options: [check, links, catalog]
 
 permissions:
   contents: write
@@ -36,3 +37,10 @@ jobs:
           git add data/products.csv
           git diff --cached --quiet || git commit -m "Admitad deeplinks"
           git push
+      - name: Upload catalog
+        if: inputs.command == 'catalog'
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog
+          path: catalog.json
+          retention-days: 7
