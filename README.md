@@ -43,8 +43,9 @@ Kids & Baby Wellness · Natural Hair Care
 
 1. Отобрать 28 новых товаров (4 в день × 7) из бестселлеров uk.iherb.com, которых ещё нет в
    `products.csv`, с рейтингом от 4.5 и тысячами отзывов, распределить по доскам.
-2. Для каждого получить партнёрский диплинк Admitad (колонка `link`) и написать тексты.
-   Добавить строки со статусом `draft`.
+2. Написать тексты и добавить строки со статусом `draft` и пустым `link`. Запушить, затем
+   `gh workflow run admitad.yml -f command=links` — Actions допишет диплинки Admitad
+   (ключи в секретах репозитория) и закоммитит; после этого `git pull`.
 3. `python scripts/render_pins.py` → проверить картинки глазами.
 4. `git add -A && git commit && git push` — без пуша Pinterest не скачает картинки.
 5. `python scripts/build_csv.py --out week-YYYY-MM-DD.csv --start YYYY-MM-DD` (понедельник).
