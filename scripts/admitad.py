@@ -10,8 +10,6 @@
 Команды:
     check  — площадки аккаунта и подключённые к Pinterest-площадке программы
     links  — диплинки для товаров из data/products.csv с пустой колонкой link
-    catalog — все программы, доступные Pinterest-площадке, в catalog.json
-              (workflow выкладывает его артефактом, в репозиторий не коммитим)
 
 Площадка ищется по слову Pinterest в названии, программа — по iHerb в названии
 среди подключённых к ней (connection_status=active).
@@ -131,20 +129,5 @@ def cmd_links():
     print(f"диплинков создано: {made}")
 
 
-def cmd_catalog():
-    tok = token()
-    space = pinterest_space(tok)
-    progs, offset = [], 0
-    while True:
-        page = results(get(tok, f"/advcampaigns/website/{space['id']}/", limit=500, offset=offset))
-        progs += page
-        offset += 500
-        if len(page) < 500:
-            break
-    with open(ROOT / "catalog.json", "w", encoding="utf-8") as f:
-        json.dump(progs, f, ensure_ascii=False, indent=1)
-    print(f"программ в каталоге: {len(progs)}")
-
-
 if __name__ == "__main__":
-    {"check": cmd_check, "links": cmd_links, "catalog": cmd_catalog}[sys.argv[1] if len(sys.argv) > 1 else "check"]()
+    {"check": cmd_check, "links": cmd_links}[sys.argv[1] if len(sys.argv) > 1 else "check"]()

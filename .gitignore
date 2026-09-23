@@ -2,4 +2,3 @@ content/cache/
 __pycache__/
 *.pyc
 .env
-catalog.json
