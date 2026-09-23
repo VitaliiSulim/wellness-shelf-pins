@@ -1,0 +1,38 @@
+name: admitad
+
+# Ручной запуск: check — проверить ключи и подключение iHerb,
+# links — дописать партнёрские ссылки в data/products.csv и закоммитить.
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: check или links
+        required: true
+        default: check
+        type: choice
+        options: [check, links]
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Admitad API
+        env:
+          ADMITAD_CLIENT_ID: ${{ secrets.ADMITAD_CLIENT_ID }}
+          ADMITAD_CLIENT_SECRET: ${{ secrets.ADMITAD_CLIENT_SECRET }}
+        run: python scripts/admitad.py ${{ inputs.command }}
+      - name: Commit links
+        if: inputs.command == 'links'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add data/products.csv
+          git diff --cached --quiet || git commit -m "Admitad deeplinks"
+          git push
