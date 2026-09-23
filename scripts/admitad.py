@@ -70,8 +70,13 @@ def get(tok, path, **params):
         return json.load(r)
 
 
+def results(data):
+    """Часть методов отдаёт {"results": [...]}, часть — сразу список."""
+    return data["results"] if isinstance(data, dict) else data
+
+
 def pinterest_space(tok):
-    spaces = get(tok, "/websites/v2/", limit=100)["results"]
+    spaces = results(get(tok, "/websites/v2/", limit=100))
     for s in spaces:
         print(f"ad space {s['id']}: {s['name']} [{s.get('status')}]")
     match = [s for s in spaces if "pinterest" in s["name"].lower()]
@@ -81,7 +86,7 @@ def pinterest_space(tok):
 
 
 def iherb_campaign(tok, w_id):
-    progs = get(tok, f"/advcampaigns/website/{w_id}/", connection_status="active", limit=500)["results"]
+    progs = results(get(tok, f"/advcampaigns/website/{w_id}/", connection_status="active", limit=500))
     for p in progs:
         print(f"program {p['id']}: {p['name']}")
     match = [p for p in progs if "iherb" in p["name"].lower() and "offline" not in p["name"].lower()]
@@ -113,7 +118,7 @@ def cmd_links():
         ulp = f"https://www.iherb.com/pr/{r['slug']}/{r['id']}"
         res = get(tok, f"/deeplink/{space['id']}/advcampaign/{camp['id']}/",
                   ulp=ulp, subid=r["id"], subid1="pinterest")
-        r["link"] = res[0]["link"] if isinstance(res, list) else res["results"][0]["link"]
+        r["link"] = results(res)[0]["link"]
         made += 1
         print(f"{r['id']}: {r['link']}")
 
